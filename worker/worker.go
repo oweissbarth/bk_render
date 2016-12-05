@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"fmt"
 	"strings"
+	"github.com/BurntSushi/toml"
 )
 
 type Worker struct{
@@ -30,13 +31,21 @@ type Job struct{
 	Done bool		`json:"done"`
 }
 
-const BCR_SERVER = "http://localhost:5000"
-const OUTPUT_DIR = "/home/oliver/render/"
-const BLENDER_COMMAND = "blender"
+
+type Config struct {
+	Bcr_server string
+	Output_dir string
+	Blender_command string
+}
+
+
 
 var worker Worker
+var config Config
 
 func main(){
+
+	readConfig()
 
 	registerWorker()
 
@@ -50,13 +59,28 @@ func main(){
 
 }
 
+func readConfig(){
+	configfile := "config.ini"
+
+	_, err := os.Stat(configfile)
+
+	if err != nil {
+		log.Fatal("Config file is missing: ", configfile)
+	}
+
+	if _, err := toml.DecodeFile(configfile, &config); err != nil {
+		log.Fatal(err)
+	}
+
+}
+
 func do(job Job){
 	println("doing job...")
 	downloadJobFile(job)
 	//blender -noaudio --background -o /home/oliver/render/frame_### -s 0 -e 4 -a -E CYCLES -F PNG test.blend
-	cmd := exec.Command("blender", 	"-noaudio",
+	cmd := exec.Command(config.Blender_command, 	"-noaudio",
 									"--background",
-									"-o", OUTPUT_DIR+strconv.Itoa(job.Id)+"/frame_####",
+									"-o", config.Output_dir+strconv.Itoa(job.Id)+"/frame_####",
 									"-s", strconv.Itoa(job.StartFrame),
 	 							  	"-e", strconv.Itoa(job.EndFrame),
 								  	"-a",
@@ -83,7 +107,7 @@ func reportDone(job Job){
 	}
 
 	req, err := http.NewRequest("PUT",
-		BCR_SERVER+"/worker/"+strconv.Itoa(worker.Id)+"/job/"+strconv.Itoa(job.Id), bytes.NewBuffer(payload))
+		config.Bcr_server+"/worker/"+strconv.Itoa(worker.Id)+"/job/"+strconv.Itoa(job.Id), bytes.NewBuffer(payload))
 
 	req.Header.Set("Content-Type", "application/json")
 
@@ -123,7 +147,7 @@ func downloadJobFile(job Job){
 func checkForJob() (bool, Job){
 	println("Checking for job")
 	req, err := http.NewRequest("GET",
-		BCR_SERVER+"/worker/"+strconv.Itoa(worker.Id)+"/job", nil)
+		config.Bcr_server+"/worker/"+strconv.Itoa(worker.Id)+"/job", nil)
 
 	req.Header.Set("Content-Type", "application/json")
 
@@ -165,7 +189,7 @@ func registerWorker(){
 	}
 
 
-	req, err := http.NewRequest("POST", BCR_SERVER+"/worker", bytes.NewBuffer(payload))
+	req, err := http.NewRequest("POST", config.Bcr_server+"/worker", bytes.NewBuffer(payload))
 
 	req.Header.Set("Content-Type", "application/json")
 

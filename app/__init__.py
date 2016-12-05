@@ -61,6 +61,7 @@ def addTask():
         name = json["name"]
         startFrame = json["startFrame"]
         endFrame = json["endFrame"]
+        num_chunks = json["numChunks"]
     except:
         print("invalid format")
         abort(400)

@@ -67,7 +67,7 @@
 	<h1 class="ui header">Submit Job</h1>
 
 
-	<form class="ui form" id="submitJob" method="post" enctype="multipart/form-data">
+	<form class="ui form" id="submitJob" method="post" enctype="multipart/form-data" action="">
 	  <div class="field">
  	   <div class="ui file">
 		 <input type="file" name="file"/>
@@ -95,7 +95,7 @@
 		<input type="number" name="numChunks"/>
 	</div>
 
-	<button class="ui button" onclick="submitJob()">submit job</button>
+	<button class="ui button" onclick="submitJob(); return false;">submit job</button>
 	</form>
 </div>
 
@@ -113,7 +113,7 @@
 				dataType: "json",
 				contentType: "application/json; charset=utf-8",
 				async: true,
-				data: JSON.stringify({"name": name, "startFrame": start, "endFrame": end}),
+				data: JSON.stringify({"name": name, "startFrame": start, "endFrame": end, "numChunks": numChunks}),
 				success: function(result){
 					uploadFile(result);
 				}
