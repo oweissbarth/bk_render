@@ -26,6 +26,7 @@ class Task(db.Model):
             self.name = json['name']
             self.startFrame = json['startFrame']
             self.endFrame = (json['endFrame'])
+            self.num_chunks = (json['numChunks'])
 
         except KeyError:
             print("Invalid format")

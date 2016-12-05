@@ -27,6 +27,7 @@ type Job struct{
 	EndFrame int	`json:"endFrame"`
 	TaskId int		`json:"taskId"`
 	JobFile string	`json:"jobFile"`
+	Done bool		`json:"done"`
 }
 
 const BCR_SERVER = "http://localhost:5000"
@@ -68,10 +69,37 @@ func do(job Job){
 	if err != nil{
 		log.Fatal(err)
 	}
+	job.Done = true
 	reportDone(job)
 }
 
 func reportDone(job Job){
+	println("reporting job done")
+
+	payload, err := json.Marshal(job)
+
+	if err != nil {
+		println(err)
+	}
+
+	req, err := http.NewRequest("PUT",
+		BCR_SERVER+"/worker/"+strconv.Itoa(worker.Id)+"/job/"+strconv.Itoa(job.Id), bytes.NewBuffer(payload))
+
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		println("Error reported")
+	}
+
+	println("reported")
 
 }
 

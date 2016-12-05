@@ -117,6 +117,29 @@ def getJob(id):
     return response
 
 
+@app.route("/worker/<int:workerid>/job/<int:jobid>", methods=["PUT"])
+def updateJob(workerid, jobid):
+    chunk = Chunk.query.filter_by(id=jobid).first()
+    if(chunk is None):
+        abort(404)
+    if(chunk.worker != workerid):
+        abort(403)
+
+    json = request.get_json(force=True, silent=True)
+    try:
+        done = json["done"]
+    except:
+        print("invalid format")
+        abort(400)
+
+    chunk.available = False
+    chunk.done = done
+    db.session.commit()
+    response = to_json(chunk.to_json())
+    response.status_code = 200
+    return response
+
+
 @app.route("/worker", methods=["POST"])
 def addWorker():
     json = request.get_json(force=True)

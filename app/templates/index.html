@@ -15,31 +15,9 @@
 
 </head>
 <body>
-	<form class="ui form" id="submitJob" method="post" enctype="multipart/form-data">
-	  <div class="field">
- 	   <div class="ui file">
-		 <input type="file" name="file"/>
- 			<label>Job File</label>
-		</div>
-	</div>
+	<div class="ui container">
 
-	<div class="field">
-		 <label>Task name</label>
-		 <input type="text" name="name"/>
-	</div>
 
-   	<div class="field">
-		<label>start frame</label>
-		<input type="number" name="startFrame"/>
- 	</div>
-
-	<div class="field">
-		<label>end frame</label>
-		<input type="number" name="endFrame"/>
-	</div>
-
-	<button class="ui button" onclick="submitJob()">submit job</button>
-	</form>
 
 
 
@@ -65,7 +43,7 @@
 			</td>
 		</tr>
 	{% endfor %}
-	<table>
+</table>
 
 	<h1 class="ui header">Workers</h1>
 
@@ -82,12 +60,51 @@
 			<td>{{worker.lastOnline}}</td>
 		</tr>
 	{% endfor %}
-	<table>
+</table>
+
+<div class="ui segment">
+	<h1 class="ui header">Submit Job</h1>
+
+
+	<form class="ui form" id="submitJob" method="post" enctype="multipart/form-data">
+	  <div class="field">
+ 	   <div class="ui file">
+		 <input type="file" name="file"/>
+ 			<label>Job File</label>
+		</div>
+	</div>
+
+	<div class="field">
+		 <label>Task name</label>
+		 <input type="text" name="name"/>
+	</div>
+
+   	<div class="field">
+		<label>start frame</label>
+		<input type="number" name="startFrame"/>
+ 	</div>
+
+	<div class="field">
+		<label>end frame</label>
+		<input type="number" name="endFrame"/>
+	</div>
+
+	<div class="field">
+		<label>chunks</label>
+		<input type="number" name="numChunks"/>
+	</div>
+
+	<button class="ui button" onclick="submitJob()">submit job</button>
+	</form>
+</div>
+
+	</div>
 	<script>
 		function submitJob(){
 			name = $("input[name='name']").val();
 			start = $("input[name='startFrame']").val();
 			end = $("input[name='endFrame']").val();
+			numChunks = $("input[name='numChunks']").val();
 
 			$.ajax({
 				type: "POST",
