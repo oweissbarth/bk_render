@@ -26,7 +26,7 @@
 	<table class="ui celled table">
 		<thead>
 			<tr>
-				<th>Task name</th> <th> startFrame</th><th>endFrame</th><th>progress</th>
+				<th>Task name</th> <th> startFrame</th><th>endFrame</th><th>progress</th><th>actions</th>
 			</tr>
 		</thead>
 	{% for task in tasks %}
@@ -41,6 +41,7 @@
   					</div>
 				</div>
 			</td>
+			<td><i class="remove circle icon" onclick="deleteTask({{task.id}})"></i></td>
 		</tr>
 	{% endfor %}
 </table>
@@ -128,6 +129,20 @@
 			xhr.open("POST", url, true);
 			xhr.send(data);
 
+		}
+
+		function deleteTask(id){
+			$.ajax({
+				type: "DELETE",
+				url: "/tasks/"+id,
+				dataType: "json",
+				contentType: "application/json; charset=utf-8",
+				async: true,
+				data: JSON.stringify({}),
+				success: function(result){
+
+				}
+			});
 		}
 		$(".taskProgress").progress();
 

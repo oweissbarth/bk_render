@@ -16,7 +16,7 @@ class Task(db.Model):
     endFrame = db.Column(db.Integer)
     num_chunks = db.Column(db.Integer)
     filePath = db.Column(db.String(128))
-    chunks = db.relationship('Chunk', backref='task', lazy='dynamic')
+    chunks = db.relationship('Chunk', backref='task', lazy='dynamic', cascade="delete")
 
     def __init__(self):
         pass

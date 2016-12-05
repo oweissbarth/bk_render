@@ -38,6 +38,22 @@ def getTask(id):
     return to_json(Task.query.filter_by(id=id).first())
 
 
+@app.route("/tasks/<int:id>", methods=["DELETE"])
+def deleteTask(id):
+    task = Task.query.filter_by(id=id).first()
+
+    if(task is None):
+        abort(404)
+
+    db.session.delete(task)
+    db.session.commit()
+
+    response = jsonify({})
+    response.status_code = 201
+
+    return response
+
+
 @app.route("/tasks", methods=["POST"])
 def addTask():
     json = request.get_json(force=True, silent=True)
