@@ -4,6 +4,8 @@ from flask import url_for, abort, g, send_from_directory
 from itsdangerous import (TimedJSONWebSignatureSerializer
                           as Serializer, BadSignature, SignatureExpired)
 
+import os
+
 from app import db
 
 from app import app
@@ -58,6 +60,7 @@ class Chunk(db.Model):
     done = db.Column(db.Boolean)
     worker = db.Column(db.Integer, db.ForeignKey("worker.id"))
     jobFile = db.Column(db.String(128))
+    jobFileType = db.Column(db.String(20))
 
     def __init__(self):
         pass
@@ -68,6 +71,8 @@ class Chunk(db.Model):
         self.endFrame = end
         self.available = True
         self.jobFile = url_for("getJobfile", id=t.id, _external=True)
+        filename, ext = os.path.splitext(t.filePath)
+        self.jobFileType = ext
 
     def from_json(self, json):
         try:
@@ -86,7 +91,8 @@ class Chunk(db.Model):
             "id": self.id,
             "startFrame": self.startFrame,
             "endFrame": self.endFrame,
-            "jobFile": self.jobFile
+            "jobFile": self.jobFile,
+            "jobFileType": self.jobFileType
         }
 
     def get_url(self):
