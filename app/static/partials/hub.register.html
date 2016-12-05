@@ -1,0 +1,32 @@
+<div class="ui middle aligned center aligned grid">
+	<div class="column login-form">
+		<form class="ui large form" novalidate>
+			<div class="field">
+				<label for="username">Benutzername</label>
+				<input type="text" name="username" ng-model="username"/>
+			</div>
+			<div class="field">
+				<label for="email">Email</label>
+				<input type="email" name="email" ng-model="email" />
+			</div>
+			<div class="field">
+				<label for="username">Vorname</label>
+				<input type="text" name="username" ng-model="firstname" />
+			</div>
+			<div class="field">
+				<label for="username">Nachname</label>
+				<input type="text" name="username" ng-model="lastname" />
+			</div>
+			<div class="field">
+				<label for="password">Passwort</label>
+				<input type="password" name="password" ng-model="password" />
+			</div>
+			<div class="field">
+				<label for="passwordrepeat">Passwort wiederholen</label>
+				<input type="password" name="passwordrepeat" ng-model="passwordrepeat" />
+			</div>
+			<button class="ui fluid primary button" ng-click="register()">Registrieren</button>
+			<p> Schon einen Account? <a href="#/login"> Hier einloggen!</a></p>
+		</form>
+	</div>
+</div>

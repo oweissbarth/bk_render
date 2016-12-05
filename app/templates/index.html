@@ -1,0 +1,120 @@
+<!Doctype html>
+
+<html>
+<head>
+	<title>BC Render</title>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<meta charset="utf-8">
+
+	<link rel="stylesheet" href="static/css/style.css">
+	<link rel="stylesheet" href="static/css/lib/semantic.min.css" >
+	<script src="static/js/lib/jquery-3.1.1.min.js"></script>
+	<script src="static/js/lib/semantic.min.js"></script>
+
+</head>
+<body>
+	<form class="ui form" id="submitJob" method="post" enctype="multipart/form-data">
+	  <div class="field">
+ 	   <div class="ui file">
+		 <input type="file" name="file"/>
+ 			<label>Job File</label>
+		</div>
+	</div>
+
+	<div class="field">
+		 <label>Task name</label>
+		 <input type="text" name="name"/>
+	</div>
+
+   	<div class="field">
+		<label>start frame</label>
+		<input type="number" name="startFrame"/>
+ 	</div>
+
+	<div class="field">
+		<label>end frame</label>
+		<input type="number" name="endFrame"/>
+	</div>
+
+	<button class="ui button" onclick="submitJob()">submit job</button>
+	</form>
+
+
+
+	<h1 class="ui header">Tasks</h1>
+
+	<table class="ui celled table">
+		<thead>
+			<tr>
+				<th>Task name</th> <th> startFrame</th><th>endFrame</th><th>progress</th>
+			</tr>
+		</thead>
+	{% for task in tasks %}
+		<tr>
+			<td>{{task.name}}</td>
+			<td>{{task.startFrame}}</td>
+			<td>{{task.endFrame}}</td>
+			<td>
+				<div class="ui indicating progress taskProgress" data-value="{{task.chunks.filter_by(done=true).count()}}" data-total="{{task.num_chunks}}">
+  					<div class="bar">
+    					<div class="progress"></div>
+  					</div>
+				</div>
+			</td>
+		</tr>
+	{% endfor %}
+	<table>
+
+	<h1 class="ui header">Workers</h1>
+
+	<table class="ui celled table">
+		<thead>
+			<tr>
+				<th>Worker name</th> <th>IP</th><th>lastOnline</th>
+			</tr>
+		</thead>
+	{% for worker in workers %}
+		<tr>
+			<td>{{worker.name}}</td>
+			<td>{{worker.ip}}</td>
+			<td>{{worker.lastOnline}}</td>
+		</tr>
+	{% endfor %}
+	<table>
+	<script>
+		function submitJob(){
+			name = $("input[name='name']").val();
+			start = $("input[name='startFrame']").val();
+			end = $("input[name='endFrame']").val();
+
+			$.ajax({
+				type: "POST",
+				url: "/tasks",
+				dataType: "json",
+				contentType: "application/json; charset=utf-8",
+				async: true,
+				data: JSON.stringify({"name": name, "startFrame": start, "endFrame": end}),
+				success: function(result){
+					uploadFile(result);
+				}
+			});
+		}
+
+		function uploadFile(url){
+			console.log($("#submitJob"))
+			var file = $("input[name='file']")[0].files[0];
+			var data = new FormData();
+			data.append("file", file);
+			var xhr = new XMLHttpRequest();
+			xhr.open("POST", url, true);
+			xhr.send(data);
+
+		}
+		$(".taskProgress").progress();
+
+
+	</script>
+</body>
+</html>
