@@ -83,15 +83,17 @@ func do(job Job){
 	cleanWorkingDir()
 	downloadJobFile(job)
 	//blender -noaudio --background -o /home/oliver/render/frame_### -s 0 -e 4 -a -E CYCLES -F PNG test.blend
+
+	// The order of options seems to be crucial here
 	cmd := exec.Command(config.Blender_command, 	"-noaudio",
 									"--background",
+									config.Working_dir+"job.blend",
+									"-E", "CYCLES",
+									"-E", "CYCLES",
 									"-o", config.Output_dir+strconv.Itoa(job.TaskId)+"/frame_####",
 									"-s", strconv.Itoa(job.StartFrame),
 	 								"-e", strconv.Itoa(job.EndFrame),
-									"-a",
-									"-E", "CYCLES",
-									"-F", "PNG",
-									config.Working_dir+"job.blend")
+									"-a")
 	println("running: "+strings.Join(cmd.Args, " "))
 	output, err := cmd.CombinedOutput()
 	fmt.Printf("%s\n", string(output))
