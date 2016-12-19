@@ -5,13 +5,12 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"bytes"
 	"io/ioutil"
 	"io"
 	"time"
 	"strconv"
-	"fmt"
 	"strings"
 	"path/filepath"
 	"archive/zip"
@@ -50,6 +49,9 @@ var config Config
 
 func main(){
 
+	log.SetLevel(log.InfoLevel)
+
+
 	readConfig()
 
 	registerWorker()
@@ -70,11 +72,13 @@ func readConfig(){
 	_, err := os.Stat(configfile)
 
 	if err != nil {
-		log.Fatal("Config file is missing: ", configfile)
+		log.Error("Config file is missing: ", configfile)
+		os.Exit(1)
 	}
 
 	if _, err := toml.DecodeFile(configfile, &config); err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		os.Exit(1)
 	}
 
 }
@@ -95,29 +99,33 @@ func do(job Job){
 									"-s", strconv.Itoa(job.StartFrame),
 	 								"-e", strconv.Itoa(job.EndFrame),
 									"-a")
-	println("running: "+strings.Join(cmd.Args, " "))
+	log.Info("running: "+strings.Join(cmd.Args, " "))
 	output, err := cmd.CombinedOutput()
-	fmt.Printf("%s\n", string(output))
+
+	log.Debug(output)
+
 	if err != nil{
-		log.Fatal(err)
+		log.Error(err)
+		os.Exit(1)
 	}
 	job.Done = true
 	reportDone(job)
 }
 
 func cleanWorkingDir(){
-	println("cleaning working dir...")
+	log.Info("cleaning working dir...")
 	os.RemoveAll(config.Working_dir)
-	println("cleaned working dir.")
+	log.Info("cleaned working dir.")
 }
 
 func reportDone(job Job){
-	println("reporting job done")
+	log.Info("reporting job done")
 
 	payload, err := json.Marshal(job)
 
 	if err != nil {
-		println(err)
+		log.Error(err)
+		os.Exit(1)
 	}
 
 	req, err := http.NewRequest("PUT",
@@ -129,16 +137,16 @@ func reportDone(job Job){
 	resp, err := client.Do(req)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		os.Exit(1)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		println("Error reported")
+		log.Error("Marking job as done failed. Got", resp.StatusCode)
 	}
 
-	println("reported")
-
+	log.Info("Reported done.")
 }
 
 func downloadJobFile(job Job){
@@ -161,28 +169,26 @@ func downloadJobFile(job Job){
 	resp, err := http.Get(job.JobFile)
 
 	if err != nil{
-		log.Fatal(err)
-		println("could not download file")
+		log.Error("Could not download job file: ",err)
+		os.Exit(1)
 	}
 	defer resp.Body.Close()
 	io.Copy(out, resp.Body)
 
 	if job.JobFileType == ".zip"{
-		println("unzipping...")
+		log.Info("unzipping...")
 		//Unzip(config.Working_dir+filename, config.Working_dir)
 		unzip.Extract(config.Working_dir+filename, config.Working_dir)
-		println("unzipped.")
+		log.Info("unzipped.")
 
 		files, _ := ioutil.ReadDir(config.Working_dir)
-
-		println(files)
 
 		found := false
 
 		for _, f := range files {
-			println("checking: "+f.Name())
+			log.Debug("checking: "+f.Name())
 			if filepath.Ext(config.Working_dir+f.Name()) == ".blend" {
-				println("found .blend")
+				log.Info("found .blend")
 				os.Rename(config.Working_dir+f.Name(), config.Working_dir+"job.blend")
 				found = true
 				break
@@ -190,7 +196,8 @@ func downloadJobFile(job Job){
 		}
 
 		if !found {
-			log.Fatal("no jobfile found.")
+			log.Error("No .blend found in archive")
+			os.Exit(1)
 		}
 
 
@@ -199,7 +206,7 @@ func downloadJobFile(job Job){
 }
 
 func checkForJob() (bool, Job){
-	println("Checking for job")
+	log.Info("Checking for job")
 	req, err := http.NewRequest("GET",
 		config.Bcr_server+"/worker/"+strconv.Itoa(worker.Id)+"/job", nil)
 
@@ -209,16 +216,17 @@ func checkForJob() (bool, Job){
 	resp, err := client.Do(req)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		os.Exit(1)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 404 {
-		println("no job.")
+		log.Info("no job.")
 		return false, Job{}
 	}
 
-	println("Got job!")
+	log.Info("Got job!")
 
 	body, _ := ioutil.ReadAll(resp.Body)
 
@@ -239,8 +247,8 @@ func registerWorker(){
 	payload, err := json.Marshal(worker)
 
 	if err != nil {
-		println(err)
-	}
+		log.Error("Could not register worker:", err)
+		os.Exit(1)	}
 
 
 	req, err := http.NewRequest("POST", config.Bcr_server+"/worker", bytes.NewBuffer(payload))
@@ -251,13 +259,14 @@ func registerWorker(){
 	resp, err := client.Do(req)
 
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Error(err)
+		os.Exit(1)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 201 {
-		log.Fatal("Server ERROR")
+		log.Error("Could not register worker. Got status code", resp.StatusCode)
+		os.Exit(1)
 	}
 
 	body, _ := ioutil.ReadAll(resp.Body)
