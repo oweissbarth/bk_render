@@ -90,7 +90,7 @@ func do(job Job){
 									"--background",
 									config.Working_dir+"job.blend",
 									"-E", "CYCLES",
-									"-E", "CYCLES",
+									"-F", "PNG",
 									"-o", config.Output_dir+strconv.Itoa(job.TaskId)+"/frame_####",
 									"-s", strconv.Itoa(job.StartFrame),
 	 								"-e", strconv.Itoa(job.EndFrame),

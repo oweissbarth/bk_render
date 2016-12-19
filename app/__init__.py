@@ -95,7 +95,7 @@ def addFile(id):
 
     t.filePath = filename
 
-    num_chunks = 5
+    num_chunks = t.num_chunks
     start = t.startFrame
     end = t.endFrame
 
@@ -122,7 +122,15 @@ def getJobfile(id):
 
 @app.route("/worker/<int:id>/job", methods=["GET"])
 def getJob(id):
-    chunk = Chunk.query.filter_by(available=True).first()
+    worker = Worker.query.filter_by(id=id).first()
+    worker.lastOnline = datetime.utcnow()
+    db.session.commit()
+
+    # if there is an unfinished task assigned to the worker he will get it again
+    chunk = Chunk.query.filter_by(done=False, worker=id).first()
+    if(chunk is None):
+        chunk = Chunk.query.filter_by(available=True).first()
+
     if(chunk is None):
         abort(404)
 
@@ -137,6 +145,10 @@ def getJob(id):
 @app.route("/worker/<int:workerid>/job/<int:jobid>", methods=["PUT"])
 def updateJob(workerid, jobid):
     chunk = Chunk.query.filter_by(id=jobid).first()
+    worker = Worker.query.filter_by(id=workerid).first()
+    worker.lastOnline = datetime.utcnow()
+    db.session.commit()
+
     if(chunk is None):
         abort(404)
     if(chunk.worker != workerid):

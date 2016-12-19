@@ -89,6 +89,7 @@ class Chunk(db.Model):
     def to_json(self):
         return{
             "id": self.id,
+            "taskId": self.taskId,
             "startFrame": self.startFrame,
             "endFrame": self.endFrame,
             "jobFile": self.jobFile,
@@ -121,6 +122,9 @@ class Worker(db.Model):
             abort(400)
 
         return self
+
+    def online(self):
+        self.lastOnline = datetime.utcnow()
 
     def to_json(self):
         return{
