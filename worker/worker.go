@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"archive/zip"
 	"github.com/BurntSushi/toml"
+	"github.com/xyproto/unzip"
 )
 
 type Worker struct{
@@ -168,18 +169,28 @@ func downloadJobFile(job Job){
 
 	if job.JobFileType == ".zip"{
 		println("unzipping...")
-		Unzip(config.Working_dir+filename, config.Working_dir)
+		//Unzip(config.Working_dir+filename, config.Working_dir)
+		unzip.Extract(config.Working_dir+filename, config.Working_dir)
 		println("unzipped.")
 
 		files, _ := ioutil.ReadDir(config.Working_dir)
+
+		println(files)
+
+		found := false
 
 		for _, f := range files {
 			println("checking: "+f.Name())
 			if filepath.Ext(config.Working_dir+f.Name()) == ".blend" {
 				println("found .blend")
 				os.Rename(config.Working_dir+f.Name(), config.Working_dir+"job.blend")
+				found = true
 				break
 			}
+		}
+
+		if !found {
+			log.Fatal("no jobfile found.")
 		}
 
 
@@ -256,62 +267,39 @@ func registerWorker(){
 }
 
 
-// unzip from http://stackoverflow.com/questions/20357223/easy-way-to-unzip-file-with-golang
-func Unzip(src, dest string) error {
-    r, err := zip.OpenReader(src)
-    if err != nil {
-        return err
-    }
-    defer func() {
-        if err := r.Close(); err != nil {
-            panic(err)
-        }
-    }()
+func Unzip(archive, target string) error {
+	reader, err := zip.OpenReader(archive)
+	if err != nil {
+		return err
+	}
 
-    os.MkdirAll(dest, 0755)
+	if err := os.MkdirAll(target, 0755); err != nil {
+		return err
+	}
 
-    // Closure to address file descriptors issue with all the deferred .Close() methods
-    extractAndWriteFile := func(f *zip.File) error {
-        rc, err := f.Open()
-        if err != nil {
-            return err
-        }
-        defer func() {
-            if err := rc.Close(); err != nil {
-                panic(err)
-            }
-        }()
+	for _, file := range reader.File {
+		path := filepath.Join(target, file.Name)
+		if file.FileInfo().IsDir() {
+			os.MkdirAll(path, file.Mode())
+			continue
+		}
 
-        path := filepath.Join(dest, f.Name)
+		fileReader, err := file.Open()
+		if err != nil {
+			return err
+		}
+		defer fileReader.Close()
 
-        if f.FileInfo().IsDir() {
-            os.MkdirAll(path, f.Mode())
-        } else {
-            os.MkdirAll(filepath.Dir(path), f.Mode())
-            f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-            if err != nil {
-                return err
-            }
-            defer func() {
-                if err := f.Close(); err != nil {
-                    panic(err)
-                }
-            }()
+		targetFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+		if err != nil {
+			return err
+		}
+		defer targetFile.Close()
 
-            _, err = io.Copy(f, rc)
-            if err != nil {
-                return err
-            }
-        }
-        return nil
-    }
+		if _, err := io.Copy(targetFile, fileReader); err != nil {
+			return err
+		}
+	}
 
-    for _, f := range r.File {
-        err := extractAndWriteFile(f)
-        if err != nil {
-            return err
-        }
-    }
-
-    return nil
+	return nil
 }
