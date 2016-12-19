@@ -30,7 +30,7 @@
 			</tr>
 		</thead>
 	{% for task in tasks %}
-		<tr>
+		<tr class="task-{{task.id}}">
 			<td>{{task.name}}</td>
 			<td>{{task.startFrame}}</td>
 			<td>{{task.endFrame}}</td>
@@ -63,7 +63,7 @@
 	{% endfor %}
 </table>
 
-<div class="ui segment">
+<div class="ui segment submitSection">
 	<h1 class="ui header">Submit Job</h1>
 
 
@@ -95,7 +95,7 @@
 		<input type="number" name="numChunks"/>
 	</div>
 
-	<button class="ui button" onclick="submitJob(); return false;">submit job</button>
+	<button class="ui button submitButton"  onclick="submitJob(); return false;">submit job</button>
 	</form>
 </div>
 
@@ -125,10 +125,53 @@
 			var file = $("input[name='file']")[0].files[0];
 			var data = new FormData();
 			data.append("file", file);
-			var xhr = new XMLHttpRequest();
-			xhr.open("POST", url, true);
-			xhr.send(data);
 
+			$.ajax({
+				"type": "POST",
+				"url": url,
+				"dataType": "multipart/form-data; boundary="+Math.random().toString(36).substring(7),
+				"contentType": false,
+				"async": true,
+				"data": data,
+				"processData": false,
+				"xhr" : function(){
+					var myXHR = $.ajaxSettings.xhr();
+					myXHR.upload.addEventListener('progress',uploadProgress, false);
+					return myXHR;
+				},
+				"success": function(data, status , xhr){
+					setTimeout(function(){
+						$("#submitProgress").fadeOut(function(){$("#submitProgress").remove()});
+					}, 2000);
+					console.log("data:"+data);
+				},
+				"error": function(xhr, status, error){
+					console.log("error"+error);
+				},
+				"complete":function(){
+					setTimeout(function(){
+						$("#submitProgress").fadeOut(function(){$("#submitProgress").remove()});
+					}, 2000);
+				}
+			});
+
+			$('<div class="ui bottom attached progress" id="submitProgress" ><div class="bar"><div class="progress"></div></div>').appendTo(".submitSection");
+
+			$("#submitProgress").progress();
+
+
+		}
+
+		function uploadProgress(e){
+			$("#submitProgress").progress("set percent", e.loaded/e.total*100);
+		}
+
+		function uploadDoneResponse(e){
+			console.log(e.response);
+		}
+
+		function uploadError(e){
+			$('<div class="ui negative message"><i class="close icon"></i><div class="header">There was an Error</div><p>'+e.response+'</p></div>').appendTo(".submitSection");
 		}
 
 		function deleteTask(id){
@@ -140,10 +183,17 @@
 				async: true,
 				data: JSON.stringify({}),
 				success: function(result){
-
+					$(".task-"+id).remove();
 				}
 			});
 		}
+
+
+		function addJobToList(id, name, startFrame, endFrame){
+
+		}
+
+
 		$(".taskProgress").progress();
 
 
