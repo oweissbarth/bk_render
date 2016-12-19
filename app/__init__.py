@@ -48,6 +48,10 @@ def deleteTask(id):
     db.session.delete(task)
     db.session.commit()
 
+    filename = task.filePath
+
+    os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
     response = jsonify({})
     response.status_code = 201
 
