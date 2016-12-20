@@ -23,32 +23,32 @@ from app.models import *
 
 @app.route("/")
 def index():
-    tasks = Job.query.all()
+    jobs = Job.query.all()
     workers = Worker.query.all()
-    return render_template("index.html", tasks=tasks, workers=workers)
+    return render_template("index.html", jobs=jobs, workers=workers)
 
 
-@app.route("/tasks", methods=["GET"])
+@app.route("/jobs", methods=["GET"])
 def getJobs():
     return to_json(Job.query.all())
 
 
-@app.route("/tasks/<int:id>", methods=["GET"])
+@app.route("/jobs/<int:id>", methods=["GET"])
 def getJob(id):
     return to_json(Job.query.filter_by(id=id).first())
 
 
-@app.route("/tasks/<int:id>", methods=["DELETE"])
+@app.route("/jobs/<int:id>", methods=["DELETE"])
 def deleteJob(id):
-    task = Job.query.filter_by(id=id).first()
+    job = Job.query.filter_by(id=id).first()
 
-    if(task is None):
+    if(job is None):
         abort(404)
 
-    db.session.delete(task)
+    db.session.delete(job)
     db.session.commit()
 
-    filename = task.filename
+    filename = job.filename
 
     os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
@@ -58,7 +58,7 @@ def deleteJob(id):
     return response
 
 
-@app.route("/tasks", methods=["POST"])
+@app.route("/jobs", methods=["POST"])
 def addJob():
     json = request.get_json(force=True, silent=True)
     try:
@@ -70,20 +70,20 @@ def addJob():
         print("invalid format")
         abort(400)
 
-    task = Job().from_json(json)
+    job = Job().from_json(json)
 
-    db.session.add(task)
+    db.session.add(job)
     db.session.commit()
 
-    print(task.get_url())
-    response = to_json(task.get_url())
+    print(job.get_url())
+    response = to_json(job.get_url())
 
     response.status_code = 201
 
     return response
 
 
-@app.route("/tasks/<int:id>", methods=["POST"])
+@app.route("/jobs/<int:id>", methods=["POST"])
 def addFile(id):
     t = Job.query.filter_by(id=id).first()
 
@@ -130,7 +130,7 @@ def requestJob(id):
     worker.lastOnline = datetime.utcnow()
     db.session.commit()
 
-    # if there is an unfinished task assigned to the worker he will get it again
+    # if there is an unfinished job assigned to the worker he will get it again
     chunk = Chunk.query.filter_by(done=False, worker=id).first()
     if(chunk is None):
         chunk = Chunk.query.filter_by(available=True).first()

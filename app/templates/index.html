@@ -21,27 +21,27 @@
 
 
 
-	<h1 class="ui header">Tasks</h1>
+	<h1 class="ui header">Job</h1>
 
 	<table class="ui celled table">
 		<thead>
 			<tr>
-				<th>Task name</th> <th> startFrame</th><th>endFrame</th><th>progress</th><th>actions</th>
+				<th>Job name</th> <th> startFrame</th><th>endFrame</th><th>progress</th><th>actions</th>
 			</tr>
 		</thead>
-	{% for task in tasks %}
-		<tr class="task-{{task.id}}">
-			<td>{{task.name}}</td>
-			<td>{{task.startFrame}}</td>
-			<td>{{task.endFrame}}</td>
+	{% for job in jobs %}
+		<tr class="job-{{job.id}}">
+			<td>{{job.name}}</td>
+			<td>{{job.startFrame}}</td>
+			<td>{{job.endFrame}}</td>
 			<td>
-				<div class="ui indicating progress taskProgress" data-value="{{task.chunks.filter_by(done=true).count()}}" data-total="{{task.num_chunks}}">
+				<div class="ui indicating progress jobProgress" data-value="{{job.chunks.filter_by(done=true).count()}}" data-total="{{job.num_chunks}}">
   					<div class="bar">
     					<div class="progress"></div>
   					</div>
 				</div>
 			</td>
-			<td><i class="remove circle icon" onclick="deleteTask({{task.id}})"></i></td>
+			<td><i class="remove circle icon" onclick="deleteTask({{job.id}})"></i></td>
 		</tr>
 	{% endfor %}
 </table>
@@ -109,7 +109,7 @@
 
 			$.ajax({
 				type: "POST",
-				url: "/tasks",
+				url: "/jobs",
 				dataType: "json",
 				contentType: "application/json; charset=utf-8",
 				async: true,
@@ -177,13 +177,13 @@
 		function deleteTask(id){
 			$.ajax({
 				type: "DELETE",
-				url: "/tasks/"+id,
+				url: "/jobs/"+id,
 				dataType: "json",
 				contentType: "application/json; charset=utf-8",
 				async: true,
 				data: JSON.stringify({}),
 				success: function(result){
-					$(".task-"+id).remove();
+					$(".job-"+id).remove();
 				}
 			});
 		}
@@ -194,7 +194,7 @@
 		}
 
 
-		$(".taskProgress").progress();
+		$(".jobProgress").progress();
 
 
 	</script>
