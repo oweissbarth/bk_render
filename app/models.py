@@ -17,7 +17,7 @@ class Job(db.Model):
     startFrame = db.Column(db.Integer)
     endFrame = db.Column(db.Integer)
     num_chunks = db.Column(db.Integer)
-    filePath = db.Column(db.String(128))
+    filename = db.Column(db.String(128))
     chunks = db.relationship('Chunk', backref='job', lazy='dynamic', cascade="delete")
 
     def __init__(self):
@@ -71,7 +71,7 @@ class Chunk(db.Model):
         self.endFrame = end
         self.available = True
         self.jobFile = url_for("getJobfile", id=t.id, _external=True)
-        filename, ext = os.path.splitext(t.filePath)
+        filename, ext = os.path.splitext(t.filename)
         self.jobFileType = ext
 
     def from_json(self, json):

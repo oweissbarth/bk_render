@@ -48,7 +48,7 @@ def deleteJob(id):
     db.session.delete(task)
     db.session.commit()
 
-    filename = task.filePath
+    filename = task.filename
 
     os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
@@ -97,7 +97,7 @@ def addFile(id):
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     f.save(filepath)
 
-    t.filePath = filename
+    t.filename = filename
 
     num_chunks = t.num_chunks
     start = t.startFrame
@@ -119,7 +119,7 @@ def addFile(id):
 @app.route("/jobfile/<int:id>", methods=["GET"])
 def getJobfile(id):
     t = Job.query.filter_by(id=id).first()
-    return send_from_directory(app.config['UPLOAD_FOLDER'], t.filePath,
+    return send_from_directory(app.config['UPLOAD_FOLDER'], t.filename,
                                as_attachment=True,
                                attachment_filename="job.blend")
 
