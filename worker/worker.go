@@ -24,14 +24,14 @@ type Worker struct{
 	Ip int		`json:"ip"`
 }
 
-type Job struct{
-	Id  int			`json:"id",omitempty`
-	StartFrame int	`json:"startFrame"`
-	EndFrame int	`json:"endFrame"`
-	TaskId int		`json:"taskId"`
-	JobFile string	`json:"jobFile"`
-	JobFileType string `json:"jobFileType"`
-	Done bool		`json:"done"`
+type Chunk struct{
+	Id  int				`json:"id",omitempty`
+	StartFrame int		`json:"startFrame"`
+	EndFrame int		`json:"endFrame"`
+	JobId int			`json:"jobId"`
+	JobFile string		`json:"jobFile"`
+	JobFileType string 	`json:"jobFileType"`
+	Done bool			`json:"done"`
 }
 
 
@@ -57,7 +57,7 @@ func main(){
 	registerWorker()
 
 	for true {
-		got, job := checkForJob()
+		got, job := checkForChunk()
 		if got == true {
 			do(job)
 		}
@@ -83,10 +83,10 @@ func readConfig(){
 
 }
 
-func do(job Job){
+func do(job Chunk){
 	println("doing job...")
 	cleanWorkingDir()
-	downloadJobFile(job)
+	downloadChunkFile(job)
 	//blender -noaudio --background -o /home/oliver/render/frame_### -s 0 -e 4 -a -E CYCLES -F PNG test.blend
 
 	// The order of options seems to be crucial here
@@ -95,7 +95,7 @@ func do(job Job){
 									config.Working_dir+"job.blend",
 									"-E", "CYCLES",
 									"-F", "PNG",
-									"-o", config.Output_dir+strconv.Itoa(job.TaskId)+"/frame_####",
+									"-o", config.Output_dir+strconv.Itoa(job.JobId)+"/frame_####",
 									"-s", strconv.Itoa(job.StartFrame),
 	 								"-e", strconv.Itoa(job.EndFrame),
 									"-a")
@@ -118,7 +118,7 @@ func cleanWorkingDir(){
 	log.Info("cleaned working dir.")
 }
 
-func reportDone(job Job){
+func reportDone(job Chunk){
 	log.Info("reporting job done")
 
 	payload, err := json.Marshal(job)
@@ -149,7 +149,7 @@ func reportDone(job Job){
 	log.Info("Reported done.")
 }
 
-func downloadJobFile(job Job){
+func downloadChunkFile(job Chunk){
 	var filename string
 	if job.JobFileType == ".zip"{
 		filename = "job.zip"
@@ -205,7 +205,7 @@ func downloadJobFile(job Job){
 
 }
 
-func checkForJob() (bool, Job){
+func checkForChunk() (bool, Chunk){
 	log.Info("Checking for job")
 	req, err := http.NewRequest("GET",
 		config.Bcr_server+"/worker/"+strconv.Itoa(worker.Id)+"/job", nil)
@@ -223,7 +223,7 @@ func checkForJob() (bool, Job){
 
 	if resp.StatusCode == 404 {
 		log.Info("no job.")
-		return false, Job{}
+		return false, Chunk{}
 	}
 
 	log.Info("Got job!")
@@ -231,7 +231,7 @@ func checkForJob() (bool, Job){
 	body, _ := ioutil.ReadAll(resp.Body)
 
 
-	job := Job{}
+	job := Chunk{}
 
 	json.Unmarshal(body, &job)
 
@@ -265,7 +265,7 @@ func registerWorker(){
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 201 {
-		log.Error("Could not register worker. Got status code", resp.StatusCode)
+		log.Error("Could not register worker. Got status code: ", resp.StatusCode)
 		os.Exit(1)
 	}
 

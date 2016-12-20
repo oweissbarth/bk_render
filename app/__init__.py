@@ -23,24 +23,24 @@ from app.models import *
 
 @app.route("/")
 def index():
-    tasks = Task.query.all()
+    tasks = Job.query.all()
     workers = Worker.query.all()
     return render_template("index.html", tasks=tasks, workers=workers)
 
 
 @app.route("/tasks", methods=["GET"])
-def getTasks():
-    return to_json(Task.query.all())
+def getJobs():
+    return to_json(Job.query.all())
 
 
 @app.route("/tasks/<int:id>", methods=["GET"])
-def getTask(id):
-    return to_json(Task.query.filter_by(id=id).first())
+def getJob(id):
+    return to_json(Job.query.filter_by(id=id).first())
 
 
 @app.route("/tasks/<int:id>", methods=["DELETE"])
-def deleteTask(id):
-    task = Task.query.filter_by(id=id).first()
+def deleteJob(id):
+    task = Job.query.filter_by(id=id).first()
 
     if(task is None):
         abort(404)
@@ -59,7 +59,7 @@ def deleteTask(id):
 
 
 @app.route("/tasks", methods=["POST"])
-def addTask():
+def addJob():
     json = request.get_json(force=True, silent=True)
     try:
         name = json["name"]
@@ -70,7 +70,7 @@ def addTask():
         print("invalid format")
         abort(400)
 
-    task = Task().from_json(json)
+    task = Job().from_json(json)
 
     db.session.add(task)
     db.session.commit()
@@ -85,7 +85,7 @@ def addTask():
 
 @app.route("/tasks/<int:id>", methods=["POST"])
 def addFile(id):
-    t = Task.query.filter_by(id=id).first()
+    t = Job.query.filter_by(id=id).first()
 
     if(t is None):
         abort(404)
@@ -118,14 +118,14 @@ def addFile(id):
 
 @app.route("/jobfile/<int:id>", methods=["GET"])
 def getJobfile(id):
-    t = Task.query.filter_by(id=id).first()
+    t = Job.query.filter_by(id=id).first()
     return send_from_directory(app.config['UPLOAD_FOLDER'], t.filePath,
                                as_attachment=True,
                                attachment_filename="job.blend")
 
 
 @app.route("/worker/<int:id>/job", methods=["GET"])
-def getJob(id):
+def requestJob(id):
     worker = Worker.query.filter_by(id=id).first()
     worker.lastOnline = datetime.utcnow()
     db.session.commit()

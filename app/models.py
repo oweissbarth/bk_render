@@ -11,14 +11,14 @@ from app import db
 from app import app
 
 
-class Task(db.Model):
+class Job(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
     startFrame = db.Column(db.Integer)
     endFrame = db.Column(db.Integer)
     num_chunks = db.Column(db.Integer)
     filePath = db.Column(db.String(128))
-    chunks = db.relationship('Chunk', backref='task', lazy='dynamic', cascade="delete")
+    chunks = db.relationship('Chunk', backref='job', lazy='dynamic', cascade="delete")
 
     def __init__(self):
         pass
@@ -45,17 +45,17 @@ class Task(db.Model):
         }
 
     def get_url(self):
-        return url_for("getTask", id=self.id, _external=True)
+        return url_for("getJob", id=self.id, _external=True)
 
     def __repr__(self):
-        return '<Task %r>' % self.name
+        return '<Job %r>' % self.name
 
 
 class Chunk(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     startFrame = db.Column(db.Integer)
     endFrame = db.Column(db.Integer)
-    taskId = db.Column(db.Integer, db.ForeignKey("task.id"))
+    jobId = db.Column(db.Integer, db.ForeignKey("job.id"))
     available = db.Column(db.Boolean)
     done = db.Column(db.Boolean)
     worker = db.Column(db.Integer, db.ForeignKey("worker.id"))
@@ -66,7 +66,7 @@ class Chunk(db.Model):
         pass
 
     def __init__(self, t, start, end):
-        self.taskId = t.id
+        self.jobId = t.id
         self.startFrame = start
         self.endFrame = end
         self.available = True
@@ -89,7 +89,7 @@ class Chunk(db.Model):
     def to_json(self):
         return{
             "id": self.id,
-            "taskId": self.taskId,
+            "jobId": self.jobId,
             "startFrame": self.startFrame,
             "endFrame": self.endFrame,
             "jobFile": self.jobFile,
