@@ -1,14 +1,12 @@
 from flask.ext.sqlalchemy import SQLAlchemy
-from datetime import datetime
 from flask import url_for, abort, g, send_from_directory
-from itsdangerous import (TimedJSONWebSignatureSerializer
-                          as Serializer, BadSignature, SignatureExpired)
 
 import os
 
 from app import db
 
 from app import app
+
 
 class Chunk(db.Model):
     id = db.Column(db.Integer, primary_key=True)

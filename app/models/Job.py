@@ -1,3 +1,7 @@
+from app import db
+from flask import url_for, abort
+
+
 class Job(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))

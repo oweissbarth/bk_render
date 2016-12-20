@@ -1,3 +1,3 @@
-import Job
-import Chunk
-import Worker
+from .Job import Job
+from .Chunk import Chunk
+from .Worker import Worker
