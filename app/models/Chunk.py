@@ -1,5 +1,5 @@
-from flask.ext.sqlalchemy import SQLAlchemy
-from flask import url_for, abort, g, send_from_directory
+from flask_sqlalchemy import SQLAlchemy
+from flask import url_for, abort
 
 import os
 
